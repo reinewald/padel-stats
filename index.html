@@ -44,7 +44,7 @@ select{min-width:190px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
 .tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:0}
 .tile .k{font-size:12px;color:var(--ink2)}
-.tile .v{font-family:var(--font-head);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.tile .v{font-family:var(--font-head);font-size:20px;line-height:1.25;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .tile .s{font-size:12px;color:var(--muted)}
 .scroll{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -93,7 +93,7 @@ ol.rank .n{font-variant-numeric:tabular-nums;color:var(--ink2);white-space:nowra
     </div>
     <div class="tiles" id="tiles"></div>
     <div class="card scroll" id="mine"></div>
-    <p class="note">Makker = på samme hold. Modstander = på det andet hold. Hver kamp tæller én gang pr. makker og én gang pr. modstander. Uafgjort tæller som en halv sejr i sejr %, ligesom i Rankade. Små stikprøver (under 4 kampe) bør tages med et gran salt.</p>
+    <p class="note">Makker = på samme hold. Modstander = på det andet hold. Hver kamp tæller én gang pr. makker og én gang pr. modstander. Uafgjort tæller som en halv sejr i sejr %, ligesom i Rankade. Små stikprøver (under 4 kampe) bør tages med et gran salt. Bedste og sværeste makker/modstander kræver mindst 3 kampe, hvis det giver nok at sammenligne, ellers 2 eller 1, og så står alle der har samme resultat.</p>
   </section>
 
   <section>
@@ -169,16 +169,33 @@ function tile(k,v,s){return `<div class="tile"><div class="k">${k}</div><div cla
 function renderMine(){
   const r=pl[me],s=streak[me];
   const others=[...P.keys()].filter(i=>i!==me);
-  const best=(src,min,asc)=>{const c=others.filter(i=>src[me][i].p>=min);c.sort((a,b)=>(pct(src[me][b])-pct(src[me][a]))*(asc?-1:1)||src[me][b].p-src[me][a].p);return c[0]};
-  const bp=best(tog,3,false),wp=best(tog,3,true),bv=best(vs,3,false),wv=best(vs,3,true);
+  const pick=(src,asc)=>{
+    for(const min of [3,2,1]){
+      const c=others.filter(i=>src[me][i].p>=min);
+      if(c.length>=2||min===1){
+        if(!c.length)return [];
+        c.sort((a,b)=>(pct(src[me][b])-pct(src[me][a]))*(asc?-1:1)||src[me][b].p-src[me][a].p);
+        const top=c[0];
+        return c.filter(i=>pct(src[me][i])===pct(src[me][top])&&src[me][i].p===src[me][top].p);
+      }
+    }
+    return [];
+  };
+  const bp=pick(tog,false),wp=pick(tog,true),bv=pick(vs,false),wv=pick(vs,true);
   const mostT=[...others].sort((a,b)=>tog[me][b].p-tog[me][a].p)[0];
-  const t=(i,src)=>i==null?['–','']:[P[i],`${rec(src[me][i])} i ${src[me][i].p} kampe (${fp(pct(src[me][i]))})`];
-  const cur=s.cur>0?`${s.cur} sejre i træk`:s.cur<0?`${-s.cur} nederlag i træk`:'Uafgjort sidst';
+  const t=(l,src)=>{
+    if(!l.length)return ['–',''];
+    const r=src[me][l[0]];
+    const names=l.slice(0,3).map(i=>P[i]).join(', ')+(l.length>3?` +${l.length-3}`:'');
+    return [names,`${rec(r)} i ${r.p} ${r.p===1?'kamp':'kampe'}${l.length>1?' hver':''} (${fp(pct(r))})${r.p<3?' · lille stikprøve':''}`];
+  };
+  const t1=i=>t([i],tog);
+  const cur=s.cur>0?`${s.cur} ${s.cur===1?'sejr':'sejre'} i træk`:s.cur<0?`${-s.cur} nederlag i træk`:'Uafgjort sidst';
   document.getElementById('tiles').innerHTML=[
     tile('Kampe',r.p,`${rec(r)} (sejre-uafgjort-nederlag)`),
     tile('Sejr %',fp(pct(r)),`Rating ${RATING[P[me]]}`),
     tile('Form lige nu',cur,`Længste sejrsrække ${s.bw}, længste tabsrække ${s.bl}`),
-    tile('Mest spillet med',...t(mostT,tog)),
+    tile('Mest spillet med',...t1(mostT)),
     tile('Bedste makker',...t(bp,tog)),
     tile('Sværeste makker',...t(wp,tog)),
     tile('Offer (mod)',...t(bv,vs)),
