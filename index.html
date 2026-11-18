@@ -196,10 +196,10 @@ function renderMine(){
     tile('Sejr %',fp(pct(r)),`Rating ${RATING[P[me]]}`),
     tile('Form lige nu',cur,`Længste sejrsrække ${s.bw}, længste tabsrække ${s.bl}`),
     tile('Mest spillet med',...t1(mostT)),
-    tile('Bedste makker',...t(bp,tog)),
-    tile('Værste makker',...t(wp,tog)),
-    tile('Offer (mod)',...t(bv,vs)),
-    tile('Nemesis (mod)',...t(wv,vs)),
+    tile('Bedste makker · min. 3 kampe',...t(bp,tog)),
+    tile('Værste makker · min. 3 kampe',...t(wp,tog)),
+    tile('Offer (mod) · min. 3 kampe',...t(bv,vs)),
+    tile('Nemesis (mod) · min. 3 kampe',...t(wv,vs)),
   ].join('');
   const rows=others.filter(i=>tog[me][i].p+vs[me][i].p>0).sort((a,b)=>(tog[me][b].p+vs[me][b].p)-(tog[me][a].p+vs[me][a].p)||P[a].localeCompare(P[b]));
   const cell=(r)=>r.p?`<td>${r.p}</td><td>${rec(r)}</td><td>${fp(pct(r))}</td><td>${bar(r)}</td>`:`<td class="dim">0</td><td class="dim">–</td><td class="dim">–</td><td></td>`;
