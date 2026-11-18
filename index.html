@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aalborg Padel Federacion – statistik</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: one column dashboard. Player picker on top drives a personal with/against table; full matrix, duo lists and records below. */
+:root{
+  --bg:#f2f5f4; --surface:#ffffff; --ink:#13201e; --ink2:#4a5b58; --muted:#7b8b88; --line:#dbe3e1;
+  --accent:#0f766e; --win:#2a78d6; --loss:#eb6834; --draw:#9aa7a4; --seq:#0f766e;
+  --font-body:'Inter',system-ui,sans-serif; --font-head:'Space Grotesk','Inter',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1514; --surface:#162120; --ink:#e8efee; --ink2:#b4c3c0; --muted:#8a9b98; --line:#2a3a38;
+  --accent:#2dd4bf; --win:#3987e5; --loss:#d95926; --draw:#6f7f7c; --seq:#19a595; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1514; --surface:#162120; --ink:#e8efee; --ink2:#b4c3c0; --muted:#8a9b98; --line:#2a3a38;
+  --accent:#2dd4bf; --win:#3987e5; --loss:#d95926; --draw:#6f7f7c; --seq:#19a595; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14px;line-height:1.5;
+  padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--font-head);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:30px;line-height:1.1}
+h2{font-size:19px}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink2);font-weight:500}
+.sub{color:var(--ink2);margin:6px 0 0}
+section{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+label.sel{display:flex;gap:8px;align-items:center;color:var(--ink2)}
+select,.seg button{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+select{min-width:190px}
+.seg{display:inline-flex}
+.seg button{border-radius:0;margin-left:-1px;cursor:pointer}
+.seg button:first-child{border-radius:6px 0 0 6px;margin-left:0}
+.seg button:last-child{border-radius:0 6px 6px 0}
+.seg button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:600}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:0}
+.tile .k{font-size:12px;color:var(--ink2)}
+.tile .v{font-family:var(--font-head);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12px;color:var(--muted)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:500;color:var(--ink2);font-size:12px}
+.grp{text-align:center;border-bottom:1px solid var(--line)}
+.bar{display:inline-flex;width:90px;height:10px;border-radius:2px;overflow:hidden;gap:2px;vertical-align:middle;background:transparent}
+.bar i{display:block;height:100%}
+.bar .w{background:var(--win)}.bar .d{background:var(--draw)}.bar .l{background:var(--loss)}
+.dim{color:var(--muted)}
+.mx{border-collapse:separate;border-spacing:2px;width:auto}
+.mx th,.mx td{border:0;padding:0;text-align:center}
+.mx td{width:38px;min-width:38px;height:30px;border-radius:3px;font-size:12px}
+.mx thead th{height:96px;vertical-align:bottom;font-size:11.5px}
+.mx thead th span{display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;padding-bottom:4px}
+.mx tbody th{text-align:right;padding-right:8px;font-size:12px;white-space:nowrap;position:sticky;left:0;background:var(--surface);z-index:1}
+.mx tr.me th{color:var(--accent);font-weight:600}
+.mx td.self{background:repeating-linear-gradient(45deg,transparent 0 4px,var(--line) 4px 5px)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--ink2);font-size:12px;align-items:center}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:5px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+ol.rank{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+ol.rank li{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:6px}
+ol.rank .n{font-variant-numeric:tabular-nums;color:var(--ink2);white-space:nowrap}
+.note{font-size:12px;color:var(--muted)}
+.hist{display:flex;align-items:flex-end;gap:6px;height:130px;padding-top:8px}
+.hist div{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%}
+.hist b{display:block;width:100%;max-width:34px;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px}
+.hist small{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.hist em{font-style:normal;font-size:11px;font-variant-numeric:tabular-nums;color:var(--ink2)}
+.streakpos{color:var(--win);font-weight:600}.streakneg{color:var(--loss);font-weight:600}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Aalborg Padel Federacion</h1>
+    <p class="sub" id="sub"></p>
+  </header>
+
+  <section>
+    <div class="row">
+      <label class="sel" for="who"><b>Vis for</b></label><select id="who"></select>
+    </div>
+    <div class="tiles" id="tiles"></div>
+    <div class="card scroll" id="mine"></div>
+    <p class="note">Makker = på samme hold. Modstander = på det andet hold. Hver kamp tæller én gang pr. makker og én gang pr. modstander. Uafgjort tæller som en halv sejr i sejr %, ligesom i Rankade. Små stikprøver (under 4 kampe) bør tages med et gran salt.</p>
+  </section>
+
+  <section>
+    <h2>Hele matrixen</h2>
+    <div class="row">
+      <div class="seg" role="group" aria-label="Relation"><button id="bT" aria-pressed="true">Sammen med</button><button id="bV" aria-pressed="false">Mod</button></div>
+      <div class="seg" role="group" aria-label="Visning"><button id="mC" aria-pressed="true">Antal kampe</button><button id="mP" aria-pressed="false">Sejr %</button></div>
+    </div>
+    <div class="legend" id="mlegend"></div>
+    <div class="card scroll"><table class="mx" id="mx"></table></div>
+    <p class="note" id="mnote"></p>
+  </section>
+
+  <section>
+    <h2>Duoer og rivaler</h2>
+    <div class="two">
+      <div class="card"><h3>Stærkeste makkerpar</h3><p class="note">Mindst 3 kampe sammen</p><ol class="rank" id="bestDuo"></ol></div>
+      <div class="card"><h3>Svageste makkerpar</h3><p class="note">Mindst 3 kampe sammen</p><ol class="rank" id="worstDuo"></ol></div>
+      <div class="card"><h3>Mest spillede makkerpar</h3><ol class="rank" id="mostDuo"></ol></div>
+      <div class="card"><h3>Mest spillede rivaliseringer</h3><p class="note">Hvem har mødt hinanden som modstandere flest gange</p><ol class="rank" id="mostRival"></ol></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Stillingen</h2>
+    <div class="card scroll"><table id="board"></table></div>
+    <p class="note">Rating er Rankades egen efter kamp 68. Stjerne i Rankade (ikke etablerede spillere) er fjernet fra navnene her.</p>
+  </section>
+
+  <section>
+    <h2>Spilleaftener</h2>
+    <div class="card"><div class="hist" id="hist"></div><p class="note">Antal kampe pr. spilledag.</p></div>
+  </section>
+</div>
+
+<script>
+const P=["Allan Vittrup","Chubby","HolmJakob","Jacek","Janabild","KennethHansen","Lasse Kammer","Lasse T","Libak","MeanMiki","Mikkel Hermann","Morten C","Morten Zinndorff","Niklas J","Pejter","Peter Holm","ReneFrandsen","Søren K","Søren Reinewald","Thomas Toemrer","Thorbjoern"];
+const RATING={"Søren K":2138,"Pejter":2072,"MeanMiki":2050,"Søren Reinewald":2025,"Morten C":2015,"Lasse T":2012,"Lasse Kammer":2006,"Libak":1996,"Allan Vittrup":1984,"Peter Holm":1976,"HolmJakob":1972,"Thomas Toemrer":1965,"KennethHansen":1963,"ReneFrandsen":1953,"Morten Zinndorff":1919,"Janabild":1912,"Mikkel Hermann":1906,"Jacek":1885,"Thorbjoern":1691,"Niklas J":1682,"Chubby":1638};
+const RAW="68,1117,W,0.10/4.16;67,1117,W,9.18/14.2;66,1117,W,9.16/0.2;65,1117,W,10.14/4.18;64,1111,W,9.10/0.5;63,1104,W,9.16/15.10;62,1104,W,17.8/3.14;61,1104,W,16.19/0.10;60,1104,W,14.9/8.15;59,1104,W,17.18/3.7;58,1101,W,3.19/5.10;57,1101,W,17.0/2.9;56,1101,D,2.5/0.3;55,1101,W,17.19/9.10;54,1021,W,20.4/16.10;53,1021,W,14.9/2.5;52,1021,W,9.20/5.16;51,1021,W,14.4/2.10;50,1007,W,0.16/4.10;49,1007,W,17.14/18.2;48,1007,W,0.14/10.18;47,1007,W,17.16/2.4;46,0930,W,7.4/10.16;45,0930,W,14.13/9.19;44,0930,W,17.2/18.5;43,0930,W,4.13/19.16;42,0930,W,2.7/5.10;41,0930,W,17.14/18.9;40,0923,W,8.16/0.4;39,0923,W,14.9/6.7;38,0923,W,11.17/2.18;37,0923,W,7.8/14.4;36,0923,W,2.0/11.16;35,0923,W,17.6/9.18;34,0916,W,4.17/12.16;33,0916,W,1.11/8.10;32,0916,W,5.18/2.7;31,0916,W,11.16/10.4;30,0916,W,5.17/7.12;29,0916,D,8.18/2.1;28,0908,W,14.0/4.16;27,0908,W,7.17/15.10;26,0908,W,18.2/5.9;25,0908,W,10.0/17.4;24,0908,W,2.14/9.16;23,0908,D,15.18/5.7;22,0901,W,7.16/0.4;21,0901,W,2.10/14.12;20,0901,W,6.18/9.15;19,0901,W,4.10/12.16;18,0901,W,7.9/6.0;17,0901,W,2.18/14.15;16,0825,D,6.10/7.11;15,0825,W,14.15/9.2;14,0825,D,10.9/11.15;13,0825,W,2.6/14.7;12,0818,W,15.10/4.12;11,0818,W,6.5/0.11;10,0818,W,9.18/2.14;9,0818,W,11.12/6.10;8,0818,W,9.5/14.0;7,0818,W,15.18/2.4;6,0812,W,9.5/16.15;5,0812,W,0.14/6.10;4,0812,W,2.18/4.12;3,0812,W,2.9/16.12;2,0812,W,6.15/5.0;1,0811,W,14.18/4.10";
+const M=RAW.split(';').map(s=>{const [id,d,res,t]=s.trim().split(',');const [a,b]=t.split('/').map(x=>x.split('.').map(Number));return{id:+id,d,res,a,b}}).sort((x,y)=>x.id-y.id);
+const N=P.length;
+const mk=()=>({p:0,w:0,d:0,l:0});
+const pl=P.map(mk),tog=P.map(()=>P.map(mk)),vs=P.map(()=>P.map(mk));
+const streak=P.map(()=>({cur:0,bw:0,bl:0}));
+for(const m of M){
+  [[m.a,m.b,0],[m.b,m.a,1]].forEach(([team,opp,side])=>{
+    const k=m.res==='D'?'d':((m.res==='W')===(side===0)?'w':'l');
+    for(const x of team){
+      pl[x].p++;pl[x][k]++;
+      const s=streak[x];
+      if(k==='w'){s.cur=s.cur>0?s.cur+1:1}else if(k==='l'){s.cur=s.cur<0?s.cur-1:-1}else{s.cur=0}
+      s.bw=Math.max(s.bw,s.cur);s.bl=Math.max(s.bl,-s.cur);
+      for(const y of team) if(y!==x){tog[x][y].p++;tog[x][y][k]++}
+      for(const y of opp){vs[x][y].p++;vs[x][y][k]++}
+    }
+  });
+}
+const pct=r=>r.p?(r.w+0.5*r.d)/r.p:null;
+const fp=v=>v==null?'–':Math.round(v*100)+'%';
+const rec=r=>`${r.w}-${r.d}-${r.l}`;
+const bar=r=>r.p?`<span class="bar" title="${rec(r)}"><i class="w" style="flex:${r.w}"></i><i class="d" style="flex:${r.d}"></i><i class="l" style="flex:${r.l}"></i></span>`:'';
+const fmtD=d=>d.slice(0,2)+'/'+d.slice(2);
+const dates=[...new Set(M.map(m=>m.d))];
+document.getElementById('sub').textContent=`${M.length} kampe, ${P.length} spillere, ${fmtD(dates[0])} – ${fmtD(dates[dates.length-1])} 2026. Alle tal er regnet ud fra kampene i Rankade.`;
+
+let me=P.indexOf('Søren Reinewald');
+const sel=document.getElementById('who');
+[...P.keys()].sort((a,b)=>P[a].localeCompare(P[b],'da')).forEach(i=>sel.add(new Option(P[i],i)));
+sel.value=me;
+sel.onchange=()=>{me=+sel.value;renderMine();renderMatrix()};
+
+function tile(k,v,s){return `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s||''}</div></div>`}
+function renderMine(){
+  const r=pl[me],s=streak[me];
+  const others=[...P.keys()].filter(i=>i!==me);
+  const best=(src,min,asc)=>{const c=others.filter(i=>src[me][i].p>=min);c.sort((a,b)=>(pct(src[me][b])-pct(src[me][a]))*(asc?-1:1)||src[me][b].p-src[me][a].p);return c[0]};
+  const bp=best(tog,3,false),wp=best(tog,3,true),bv=best(vs,3,false),wv=best(vs,3,true);
+  const mostT=[...others].sort((a,b)=>tog[me][b].p-tog[me][a].p)[0];
+  const t=(i,src)=>i==null?['–','']:[P[i],`${rec(src[me][i])} i ${src[me][i].p} kampe (${fp(pct(src[me][i]))})`];
+  const cur=s.cur>0?`${s.cur} sejre i træk`:s.cur<0?`${-s.cur} nederlag i træk`:'Uafgjort sidst';
+  document.getElementById('tiles').innerHTML=[
+    tile('Kampe',r.p,`${rec(r)} (sejre-uafgjort-nederlag)`),
+    tile('Sejr %',fp(pct(r)),`Rating ${RATING[P[me]]}`),
+    tile('Form lige nu',cur,`Længste sejrsrække ${s.bw}, længste tabsrække ${s.bl}`),
+    tile('Mest spillet med',...t(mostT,tog)),
+    tile('Bedste makker',...t(bp,tog)),
+    tile('Sværeste makker',...t(wp,tog)),
+    tile('Offer (mod)',...t(bv,vs)),
+    tile('Nemesis (mod)',...t(wv,vs)),
+  ].join('');
+  const rows=others.filter(i=>tog[me][i].p+vs[me][i].p>0).sort((a,b)=>(tog[me][b].p+vs[me][b].p)-(tog[me][a].p+vs[me][a].p)||P[a].localeCompare(P[b]));
+  const cell=(r)=>r.p?`<td>${r.p}</td><td>${rec(r)}</td><td>${fp(pct(r))}</td><td>${bar(r)}</td>`:`<td class="dim">0</td><td class="dim">–</td><td class="dim">–</td><td></td>`;
+  document.getElementById('mine').innerHTML=`<table><thead><tr><th></th><th colspan="4" class="grp">Sammen med (makker)</th><th colspan="4" class="grp">Mod (modstander)</th></tr>
+  <tr><th>Spiller</th><th>Kampe</th><th>S-U-N</th><th>Sejr %</th><th></th><th>Kampe</th><th>S-U-N</th><th>Sejr %</th><th></th></tr></thead><tbody>`+
+  rows.map(i=>`<tr><td>${P[i]}</td>${cell(tog[me][i])}${cell(vs[me][i])}</tr>`).join('')+`</tbody></table>`;
+}
+
+let rel='T',metric='C';
+const setSeg=(a,b,on)=>{a.setAttribute('aria-pressed',on);b.setAttribute('aria-pressed',!on)};
+bT.onclick=()=>{rel='T';setSeg(bT,bV,true);renderMatrix()};
+bV.onclick=()=>{rel='V';setSeg(bT,bV,false);renderMatrix()};
+mC.onclick=()=>{metric='C';setSeg(mC,mP,true);renderMatrix()};
+mP.onclick=()=>{metric='P';setSeg(mC,mP,false);renderMatrix()};
+function renderMatrix(){
+  const src=rel==='T'?tog:vs;
+  const order=[...P.keys()].sort((a,b)=>pl[b].p-pl[a].p||P[a].localeCompare(P[b]));
+  let max=1;for(const i of order)for(const j of order)if(i!==j)max=Math.max(max,src[i][j].p);
+  const head='<thead><tr><th></th>'+order.map(j=>`<th><span>${P[j]}</span></th>`).join('')+'</tr></thead>';
+  const body='<tbody>'+order.map(i=>`<tr class="${i===me?'me':''}"><th>${P[i]}</th>`+order.map(j=>{
+    if(i===j)return '<td class="self"></td>';
+    const r=src[i][j];
+    if(!r.p)return `<td class="dim" title="${P[i]} og ${P[j]}: ingen kampe">·</td>`;
+    const tip=`${P[i]} ${rel==='T'?'sammen med':'mod'} ${P[j]}: ${r.p} kampe, ${rec(r)} (${fp(pct(r))})`;
+    let bg,txt;
+    if(metric==='C'){bg=`color-mix(in srgb, var(--seq) ${Math.round(8+r.p/max*62)}%, var(--surface))`;txt=r.p}
+    else{const v=pct(r),c=v>=.5?'var(--win)':'var(--loss)';bg=`color-mix(in srgb, ${c} ${Math.round(Math.abs(v-.5)*2*60)+6}%, var(--surface))`;txt=Math.round(v*100)}
+    return `<td style="background:${bg}" title="${tip}">${txt}</td>`}).join('')+'</tr>').join('')+'</tbody>';
+  document.getElementById('mx').innerHTML=head+body;
+  document.getElementById('mlegend').innerHTML=metric==='C'
+    ?`<span><i class="sw" style="background:color-mix(in srgb,var(--seq) 12%,var(--surface))"></i>få kampe</span><span><i class="sw" style="background:color-mix(in srgb,var(--seq) 70%,var(--surface))"></i>mange kampe (op til ${max})</span><span>· = aldrig spillet</span>`
+    :`<span><i class="sw" style="background:var(--loss)"></i>rækkens spiller taber mest</span><span><i class="sw" style="background:var(--surface);border:1px solid var(--line)"></i>50 %</span><span><i class="sw" style="background:var(--win)"></i>rækkens spiller vinder mest</span><span>· = aldrig spillet</span>`;
+  document.getElementById('mnote').textContent=rel==='T'
+    ?'Læs rækken: hvor mange kampe (eller hvor stor en sejrsandel) rækkens spiller har haft sammen med kolonnens spiller. Hold musen over en celle for S-U-N.'
+    :'Læs rækken: rækkens spiller mod kolonnens spiller. Matrixen er spejlvendt: 70 % i en celle betyder 30 % i den modsatte.';
+}
+
+function duoList(el,items,fmt){document.getElementById(el).innerHTML=items.map(x=>`<li><span>${x.names}</span><span class="n">${fmt(x)}</span></li>`).join('')}
+const duos=[],rivals=[];
+for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){
+  if(tog[i][j].p)duos.push({names:P[i]+' & '+P[j],r:tog[i][j]});
+  if(vs[i][j].p)rivals.push({names:P[i]+' vs '+P[j],r:vs[i][j]});
+}
+const f=x=>`${x.r.p} kampe · ${rec(x.r)} · ${fp(pct(x.r))}`;
+const bd=duos.filter(x=>x.r.p>=3);
+duoList('bestDuo',[...bd].sort((a,b)=>pct(b.r)-pct(a.r)||b.r.p-a.r.p).slice(0,8),f);
+duoList('worstDuo',[...bd].sort((a,b)=>pct(a.r)-pct(b.r)||b.r.p-a.r.p).slice(0,8),f);
+duoList('mostDuo',[...duos].sort((a,b)=>b.r.p-a.r.p||pct(b.r)-pct(a.r)).slice(0,8),f);
+duoList('mostRival',[...rivals].sort((a,b)=>b.r.p-a.r.p).slice(0,8),x=>`${x.r.p} kampe`);
+
+const ord=[...P.keys()].sort((a,b)=>RATING[P[b]]-RATING[P[a]]);
+document.getElementById('board').innerHTML='<thead><tr><th>Spiller</th><th>Rating</th><th>Kampe</th><th>S-U-N</th><th>Sejr %</th><th></th><th>Længste sejrsrække</th><th>Form nu</th></tr></thead><tbody>'+
+ord.map(i=>{const r=pl[i],s=streak[i];const cur=s.cur>0?`<span class="streakpos">${s.cur}S</span>`:s.cur<0?`<span class="streakneg">${-s.cur}N</span>`:'<span class="dim">U</span>';
+return `<tr><td>${P[i]}</td><td>${RATING[P[i]]}</td><td>${r.p}</td><td>${rec(r)}</td><td>${fp(pct(r))}</td><td>${bar(r)}</td><td>${s.bw}</td><td>${cur}</td></tr>`}).join('')+'</tbody>';
+
+const byDate=dates.map(d=>({d,n:M.filter(m=>m.d===d).length}));
+const mx=Math.max(...byDate.map(x=>x.n));
+document.getElementById('hist').innerHTML=byDate.map(x=>`<div><em>${x.n}</em><b style="height:${x.n/mx*80}%"></b><small>${fmtD(x.d)}</small></div>`).join('');
+
+renderMine();renderMatrix();
+</script>
+
+</body>
+</html>
