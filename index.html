@@ -93,7 +93,7 @@ ol.rank .n{font-variant-numeric:tabular-nums;color:var(--ink2);white-space:nowra
     </div>
     <div class="tiles" id="tiles"></div>
     <div class="card scroll" id="mine"></div>
-    <p class="note">Makker = på samme hold. Modstander = på det andet hold. Hver kamp tæller én gang pr. makker og én gang pr. modstander. Uafgjort tæller som en halv sejr i sejr %, ligesom i Rankade. Små stikprøver (under 4 kampe) bør tages med et gran salt. Bedste og værste makker (og offer/nemesis mod modstandere) kræver mindst 3 kampe, og mindst to spillere skal have det, før der kan udpeges en bedste og en værste. Står flere med samme resultat, vises de alle.</p>
+    <p class="note">Makker = på samme hold. Modstander = på det andet hold. Hver kamp tæller én gang pr. makker og én gang pr. modstander. Uafgjort tæller som en halv sejr i sejr %, ligesom i Rankade. Små stikprøver (under 4 kampe) bør tages med et gran salt. Bedste og værste makker (og nemmeste offer og sværeste modstander) kræver mindst 2 kampe, og mindst to spillere skal have det, før der kan udpeges en bedste og en værste. Står flere med samme resultat, vises de alle.</p>
   </section>
 
   <section>
@@ -169,7 +169,7 @@ function tile(k,v,s){return `<div class="tile"><div class="k">${k}</div><div cla
 function renderMine(){
   const r=pl[me],s=streak[me];
   const others=[...P.keys()].filter(i=>i!==me);
-  const MIN=3;
+  const MIN=2;
   const qual=src=>others.filter(i=>src[me][i].p>=MIN);
   const pick=(src,asc)=>{
     const c=qual(src);
@@ -196,10 +196,10 @@ function renderMine(){
     tile('Sejr %',fp(pct(r)),`Rating ${RATING[P[me]]}`),
     tile('Form lige nu',cur,`Længste sejrsrække ${s.bw}, længste tabsrække ${s.bl}`),
     tile('Mest spillet med',...t1(mostT)),
-    tile('Bedste makker · min. 3 kampe',...t(bp,tog)),
-    tile('Værste makker · min. 3 kampe',...t(wp,tog)),
-    tile('Offer (mod) · min. 3 kampe',...t(bv,vs)),
-    tile('Nemesis (mod) · min. 3 kampe',...t(wv,vs)),
+    tile('Bedste makker · min. 2 kampe',...t(bp,tog)),
+    tile('Værste makker · min. 2 kampe',...t(wp,tog)),
+    tile('Nemmeste offer · min. 2 kampe',...t(bv,vs)),
+    tile('Sværeste modstander · min. 2 kampe',...t(wv,vs)),
   ].join('');
   const rows=others.filter(i=>tog[me][i].p+vs[me][i].p>0).sort((a,b)=>(tog[me][b].p+vs[me][b].p)-(tog[me][a].p+vs[me][a].p)||P[a].localeCompare(P[b]));
   const cell=(r)=>r.p?`<td>${r.p}</td><td>${rec(r)}</td><td>${fp(pct(r))}</td><td>${bar(r)}</td>`:`<td class="dim">0</td><td class="dim">–</td><td class="dim">–</td><td></td>`;
