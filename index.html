@@ -91,6 +91,7 @@ details ul{margin:10px 0 0;padding-left:18px;color:var(--ink2)}
     <div class="row">
       <label class="sel" for="seas"><b>Sæson</b></label><select id="seas"></select>
       <label class="sel" for="who"><b>Vis for</b></label><select id="who"></select>
+      <label class="sel" for="pmin"><b>Min. kampe</b></label><select id="pmin" style="min-width:0"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>8</option><option>10</option></select>
     </div>
     <div class="tiles" id="tiles"></div>
     <div class="card scroll" id="mine"></div>
@@ -156,6 +157,7 @@ const $=id=>document.getElementById(id);
 let sel=SEAS.length-1;           // season index, or -1 for all seasons
 let me=PL.indexOf('Søren Reinewald');
 let ST=null;                     // current stats
+let pmin=2;
 let rel='T',metric='C',mmin=1;
 
 function build(){
@@ -193,7 +195,7 @@ function renderMine(){
   const {pl,tog,vs,streak,seas,act}=ST;
   const r=pl[me],s=streak[me];
   const others=act.filter(i=>i!==me);
-  const MIN=2;
+  const MIN=pmin;
   const qual=src=>others.filter(i=>src[me][i].p>=MIN);
   const pick=(src,asc)=>{
     const c=qual(src);if(c.length<2)return [];
@@ -207,7 +209,7 @@ function renderMine(){
     if(!l.length){const q=qual(src);return ['–',q.length===1?`Kun ${PL[q[0]]} har ${MIN}+ kampe`:`Ingen med ${MIN}+ kampe`]}
     const x=src[me][l[0]];
     const names=l.slice(0,3).map(i=>PL[i]).join(', ')+(l.length>3?` +${l.length-3}`:'');
-    return [names,`${rec(x)} i ${x.p} kampe${l.length>1?' hver':''} (${fp(pct(x))})`];
+    return [names,`${rec(x)} i ${x.p} ${x.p===1?'kamp':'kampe'}${l.length>1?' hver':''} (${fp(pct(x))})`];
   };
   const t1=i=>{if(i==null||!tog[me][i].p)return ['–','Ingen makkere'];const x=tog[me][i];return [PL[i],`${rec(x)} i ${x.p} ${x.p===1?'kamp':'kampe'} (${fp(pct(x))})`]};
   const cur=s.cur>0?`${s.cur} ${s.cur===1?'sejr':'sejre'} i træk`:s.cur<0?`${-s.cur} nederlag i træk`:'Uafgjort sidst';
@@ -217,17 +219,17 @@ function renderMine(){
     tile('Sejr %',fp(pct(r)),rating),
     tile(sel<0?'Seneste form':'Form lige nu',cur,`Længste sejrsrække ${s.bw}, længste tabsrække ${s.bl}`),
     tile('Mest spillet med',...t1(mostT)),
-    tile('Bedste makker · min. 2 kampe',...t(bp,tog)),
-    tile('Værste makker · min. 2 kampe',...t(wp,tog)),
-    tile('Nemmeste offer · min. 2 kampe',...t(bv,vs)),
-    tile('Sværeste modstander · min. 2 kampe',...t(wv,vs)),
+    tile('Bedste makker · min. '+MIN+' '+(MIN===1?'kamp':'kampe'),...t(bp,tog)),
+    tile('Værste makker · min. '+MIN+' '+(MIN===1?'kamp':'kampe'),...t(wp,tog)),
+    tile('Nemmeste offer · min. '+MIN+' '+(MIN===1?'kamp':'kampe'),...t(bv,vs)),
+    tile('Sværeste modstander · min. '+MIN+' '+(MIN===1?'kamp':'kampe'),...t(wv,vs)),
   ].join('');
   const rows=others.filter(i=>tog[me][i].p+vs[me][i].p>0).sort((a,b)=>(tog[me][b].p+vs[me][b].p)-(tog[me][a].p+vs[me][a].p)||PL[a].localeCompare(PL[b],'da'));
   const cell=x=>x.p?`<td>${x.p}</td><td>${rec(x)}</td><td>${fp(pct(x))}</td><td>${bar(x)}</td>`:`<td class="dim">0</td><td class="dim">–</td><td class="dim">–</td><td></td>`;
   $('mine').innerHTML=`<table><thead><tr><th></th><th colspan="4" class="grp">Sammen med (makker)</th><th colspan="4" class="grp">Mod (modstander)</th></tr>
   <tr><th>Spiller</th><th>Kampe</th><th>S-U-N</th><th>Sejr %</th><th></th><th>Kampe</th><th>S-U-N</th><th>Sejr %</th><th></th></tr></thead><tbody>`+
   rows.map(i=>`<tr><td>${PL[i]}</td>${cell(tog[me][i])}${cell(vs[me][i])}</tr>`).join('')+`</tbody></table>`;
-  $('mnote0').textContent='Makker = på samme hold. Modstander = på det andet hold. Uafgjort tæller som en halv sejr i sejr %, ligesom i Rankade. Bedste og værste makker (og nemmeste offer og sværeste modstander) kræver mindst 2 kampe, og mindst to spillere skal have det, før der kan udpeges en bedste og en værste. Står flere med samme resultat, vises de alle.';
+  $('mnote0').textContent='Makker = på samme hold. Modstander = på det andet hold. Uafgjort tæller som en halv sejr i sejr %, ligesom i Rankade. Bedste og værste makker (og nemmeste offer og sværeste modstander) kræver mindst det antal kampe, du vælger under "Min. kampe" (standard 2), og mindst to spillere skal have det, før der kan udpeges en bedste og en værste. Står flere med samme resultat, vises de alle.';
 }
 
 function setSeg(a,b,on){a.setAttribute('aria-pressed',on);b.setAttribute('aria-pressed',!on)}
@@ -309,6 +311,7 @@ sSel.add(new Option('Alle sæsoner','-1'));
 for(let i=SEAS.length-1;i>=0;i--)sSel.add(new Option(SEAS[i],i));
 sSel.value=String(sel);
 sSel.onchange=()=>{sel=+sSel.value;mmin=sel<0?10:1;$('mmin').value=String(mmin);build();renderAll()};
+$('pmin').onchange=()=>{pmin=+$('pmin').value;renderMine()};
 $('who').onchange=()=>{me=+$('who').value;renderMine();renderMatrix()};
 build();renderAll();
 </script>
