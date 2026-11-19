@@ -91,7 +91,7 @@ details ul{margin:10px 0 0;padding-left:18px;color:var(--ink2)}
     <div class="row">
       <label class="sel" for="seas"><b>Sæson</b></label><select id="seas"></select>
       <label class="sel" for="who"><b>Vis for</b></label><select id="who"></select>
-      <label class="sel" for="pmin"><b>Min. kampe</b></label><select id="pmin" style="min-width:0"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>8</option><option>10</option></select>
+      <span class="row" id="pminw" style="gap:8px;flex-wrap:nowrap"><label class="sel" for="pmin"><b>Min. kampe</b></label><select id="pmin" style="min-width:0"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>8</option><option>10</option></select></span>
     </div>
     <div class="tiles" id="tiles"></div>
     <div class="card scroll" id="mine"></div>
@@ -310,10 +310,11 @@ const sSel=$('seas');
 sSel.add(new Option('Alle sæsoner','-1'));
 for(let i=SEAS.length-1;i>=0;i--)sSel.add(new Option(SEAS[i],i));
 sSel.value=String(sel);
-sSel.onchange=()=>{sel=+sSel.value;mmin=sel<0?10:1;$('mmin').value=String(mmin);build();renderAll()};
+function syncPmin(){if(sel>=0){pmin=2;$('pmin').value='2'}$('pminw').style.display=sel<0?'':'none'}
+sSel.onchange=()=>{sel=+sSel.value;syncPmin();mmin=sel<0?10:1;$('mmin').value=String(mmin);build();renderAll()};
 $('pmin').onchange=()=>{pmin=+$('pmin').value;renderMine()};
 $('who').onchange=()=>{me=+$('who').value;renderMine();renderMatrix()};
-build();renderAll();
+syncPmin();build();renderAll();
 </script>
 </body>
 </html>
